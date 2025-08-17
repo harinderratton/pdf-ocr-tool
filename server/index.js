@@ -7,6 +7,7 @@ const { v4: uuidv4 } = require("uuid");
 const { PDFDocument } = require("pdf-lib");
 const { fromPath } = require("pdf2pic");
 const pdfParse = require("pdf-parse");
+const pdfImgConvert = require("pdf-img-convert");
 const { Document, Packer, Paragraph } = require("docx");
 const Tesseract = require("tesseract.js");
 
@@ -93,6 +94,30 @@ const extractTextFromPDF = async (pdfPath) => {
   } catch (error) {
     console.error("Error extracting text from PDF:", error.message);
     console.error("Error details:", error);
+    return null;
+  }
+};
+
+// Convert PDF to images using pdf-img-convert (no GraphicsMagick required)
+const convertPDFToImages = async (pdfPath) => {
+  try {
+    console.log("Attempting to convert PDF to images using pdf-img-convert...");
+    const dataBuffer = await fs.readFile(pdfPath);
+
+    const outputImages = await pdfImgConvert.convert(dataBuffer, {
+      width: 2480,
+      height: 3508,
+      page_numbers: [1], // Start with first page
+      base64: false,
+    });
+
+    console.log(
+      "PDF converted to images successfully, count:",
+      outputImages.length
+    );
+    return outputImages;
+  } catch (error) {
+    console.error("Error converting PDF to images:", error.message);
     return null;
   }
 };
@@ -247,21 +272,79 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
         ],
       });
     } else {
-      // Text extraction failed, return a helpful message
-      console.log("Text extraction failed, returning helpful message");
-      res.json({
-        success: true,
-        filename: req.file.originalname,
-        totalPages: 1,
-        pages: [
-          {
-            pageNumber: 1,
-            text: "This PDF appears to be image-based and requires OCR processing. Currently, OCR processing is not available due to server configuration. Please try a PDF with selectable text or contact support for assistance.",
-            success: false,
-            method: "text_extraction_failed",
-          },
-        ],
-      });
+      // Text extraction failed, try OCR processing
+      console.log("Text extraction failed, trying OCR processing...");
+
+      // Try converting PDF to images
+      const images = await convertPDFToImages(pdfPath);
+
+      if (images && images.length > 0) {
+        try {
+          // Save the first image to a temporary file
+          const tempDir = path.join(__dirname, "temp", uuidv4());
+          await fs.ensureDir(tempDir);
+          const imagePath = path.join(tempDir, "page-1.png");
+          await fs.writeFile(imagePath, images[0]);
+
+          // Perform OCR on the image
+          const worker = await initializeWorker();
+          const {
+            data: { text },
+          } = await worker.recognize(imagePath);
+
+          // Clean up
+          await cleanupTempFiles(imagePath);
+          await fs.remove(tempDir);
+
+          if (text && text.trim().length > 0) {
+            res.json({
+              success: true,
+              filename: req.file.originalname,
+              totalPages: 1,
+              pages: [
+                {
+                  pageNumber: 1,
+                  text: text.trim(),
+                  success: true,
+                  method: "ocr",
+                },
+              ],
+            });
+          } else {
+            throw new Error("OCR produced no text");
+          }
+        } catch (ocrError) {
+          console.error("OCR processing failed:", ocrError.message);
+          res.json({
+            success: true,
+            filename: req.file.originalname,
+            totalPages: 1,
+            pages: [
+              {
+                pageNumber: 1,
+                text: "OCR processing failed. Please ensure the PDF contains clear, readable text or images. If the problem persists, please contact support.",
+                success: false,
+                method: "ocr_failed",
+              },
+            ],
+          });
+        }
+      } else {
+        // Image conversion failed
+        res.json({
+          success: true,
+          filename: req.file.originalname,
+          totalPages: 1,
+          pages: [
+            {
+              pageNumber: 1,
+              text: "Unable to process this PDF. Please ensure it's a valid PDF file with readable content. If the problem persists, please contact support.",
+              success: false,
+              method: "conversion_failed",
+            },
+          ],
+        });
+      }
     }
 
     // Clean up uploaded file
