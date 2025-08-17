@@ -61,7 +61,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-200 mt-8 pt-8 text-center">
           <p className="text-sm text-gray-500">
-            © 2024 PDF OCR Tool. Advanced document processing solution powered by cutting-edge OCR technology. 
+            © 2025 PDF OCR Tool. Advanced document processing solution powered by cutting-edge OCR technology. 
             All rights reserved. Maintained by{" "}
             <span className="font-semibold text-gray-700">Harinder Singh</span> and{" "}
             <span className="font-semibold text-gray-700">Siwesk.com</span>
