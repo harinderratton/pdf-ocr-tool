@@ -199,8 +199,8 @@ const processPDFInBatches = async (pdfPath, batchSize = 5) => {
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const pageCount = pdfDoc.getPageCount();
 
-    if (pageCount > 300) {
-      throw new Error("PDF must have 200 pages or less");
+    if (pageCount > 500) {
+      throw new Error("PDF must have 500 pages or less");
     }
 
     const results = [];
@@ -275,62 +275,18 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
       // Text extraction failed, try OCR processing
       console.log("Text extraction failed, trying OCR processing...");
 
-      // Try converting PDF to images
-      const images = await convertPDFToImages(pdfPath);
+      try {
+        // Use the batch processing function to handle all pages
+        const result = await processPDFInBatches(pdfPath);
 
-      if (images && images.length > 0) {
-        try {
-          // Save the first image to a temporary file
-          const tempDir = path.join(__dirname, "temp", uuidv4());
-          await fs.ensureDir(tempDir);
-          const imagePath = path.join(tempDir, "page-1.png");
-          await fs.writeFile(imagePath, images[0]);
-
-          // Perform OCR on the image
-          const worker = await initializeWorker();
-          const {
-            data: { text },
-          } = await worker.recognize(imagePath);
-
-          // Clean up
-          await cleanupTempFiles(imagePath);
-          await fs.remove(tempDir);
-
-          if (text && text.trim().length > 0) {
-            res.json({
-              success: true,
-              filename: req.file.originalname,
-              totalPages: 1,
-              pages: [
-                {
-                  pageNumber: 1,
-                  text: text.trim(),
-                  success: true,
-                  method: "ocr",
-                },
-              ],
-            });
-          } else {
-            throw new Error("OCR produced no text");
-          }
-        } catch (ocrError) {
-          console.error("OCR processing failed:", ocrError.message);
-          res.json({
-            success: true,
-            filename: req.file.originalname,
-            totalPages: 1,
-            pages: [
-              {
-                pageNumber: 1,
-                text: "OCR processing failed. Please ensure the PDF contains clear, readable text or images. If the problem persists, please contact support.",
-                success: false,
-                method: "ocr_failed",
-              },
-            ],
-          });
-        }
-      } else {
-        // Image conversion failed
+        res.json({
+          success: true,
+          filename: req.file.originalname,
+          totalPages: result.totalPages,
+          pages: result.results,
+        });
+      } catch (ocrError) {
+        console.error("OCR processing failed:", ocrError.message);
         res.json({
           success: true,
           filename: req.file.originalname,
@@ -338,9 +294,9 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
           pages: [
             {
               pageNumber: 1,
-              text: "Unable to process this PDF. Please ensure it's a valid PDF file with readable content. If the problem persists, please contact support.",
+              text: "OCR processing failed. Please ensure the PDF contains clear, readable text or images. If the problem persists, please contact support.",
               success: false,
-              method: "conversion_failed",
+              method: "ocr_failed",
             },
           ],
         });
@@ -349,13 +305,6 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
 
     // Clean up uploaded file
     await cleanupTempFiles(pdfPath);
-
-    res.json({
-      success: true,
-      filename: req.file.originalname,
-      totalPages: result.totalPages,
-      pages: result.results,
-    });
   } catch (error) {
     console.error("Upload error:", error);
     res.status(500).json({
