@@ -86,7 +86,9 @@ const convertPageToImage = async (pdfPath, pageNumber, outputDir) => {
     return pageData.path;
   } catch (error) {
     console.error(`Error converting page ${pageNumber} to image:`, error);
-    throw new Error(`Failed to convert page ${pageNumber} to image. Please ensure GraphicsMagick is installed.`);
+    throw new Error(
+      `Failed to convert page ${pageNumber} to image. Please ensure GraphicsMagick is installed.`
+    );
   }
 };
 

@@ -1,8 +1,11 @@
 services:
   - type: web
     name: pdf-ocr-backend
-    env: docker
-    dockerfilePath: ./Dockerfile
+    env: node
+    buildCommand: |
+      apt-get update && apt-get install -y graphicsmagick ghostscript imagemagick
+      npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
