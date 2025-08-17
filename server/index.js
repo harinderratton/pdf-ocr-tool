@@ -71,18 +71,23 @@ const cleanupTempFiles = async (filePath) => {
 
 // Convert PDF page to image
 const convertPageToImage = async (pdfPath, pageNumber, outputDir) => {
-  const options = {
-    density: 300,
-    saveFilename: `page-${pageNumber}`,
-    savePath: outputDir,
-    format: "png",
-    width: 2480,
-    height: 3508,
-  };
+  try {
+    const options = {
+      density: 300,
+      saveFilename: `page-${pageNumber}`,
+      savePath: outputDir,
+      format: "png",
+      width: 2480,
+      height: 3508,
+    };
 
-  const convert = fromPath(pdfPath, options);
-  const pageData = await convert(pageNumber);
-  return pageData.path;
+    const convert = fromPath(pdfPath, options);
+    const pageData = await convert(pageNumber);
+    return pageData.path;
+  } catch (error) {
+    console.error(`Error converting page ${pageNumber} to image:`, error);
+    throw new Error(`Failed to convert page ${pageNumber} to image. Please ensure GraphicsMagick is installed.`);
+  }
 };
 
 // Process single page with OCR
