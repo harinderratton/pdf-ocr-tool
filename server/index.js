@@ -293,40 +293,6 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "PDF OCR Server is running" });
 });
 
-// Test GraphicsMagick availability
-app.get("/api/test-gm", async (req, res) => {
-  try {
-    const { exec } = require("child_process");
-    const util = require("util");
-    const execAsync = util.promisify(exec);
-
-    const { stdout, stderr } = await execAsync("which gm");
-    const gmPath = stdout.trim();
-
-    if (gmPath) {
-      const { stdout: version } = await execAsync("gm version");
-      res.json({
-        status: "OK",
-        message: "GraphicsMagick is available",
-        path: gmPath,
-        version: version.trim(),
-      });
-    } else {
-      res.json({
-        status: "ERROR",
-        message: "GraphicsMagick not found",
-        stderr: stderr,
-      });
-    }
-  } catch (error) {
-    res.json({
-      status: "ERROR",
-      message: "Error checking GraphicsMagick",
-      error: error.message,
-    });
-  }
-});
-
 // Error handling middleware
 app.use((error, req, res, next) => {
   console.error("Server error:", error);
