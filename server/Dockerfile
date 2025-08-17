@@ -1,20 +1,10 @@
-FROM ubuntu:20.04
+FROM node:18-bullseye
 
-# Set environment variables
-ENV NODE_VERSION=18
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install system dependencies including Node.js and GraphicsMagick
+# Install GraphicsMagick and other dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
-    wget \
-    gnupg \
     graphicsmagick \
     ghostscript \
     imagemagick \
-    build-essential \
-    && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
-    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && which gm \
     && gm version

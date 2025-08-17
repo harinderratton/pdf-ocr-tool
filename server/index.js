@@ -86,15 +86,31 @@ const convertPageToImage = async (pdfPath, pageNumber, outputDir) => {
     return pageData.path;
   } catch (error) {
     console.error(`Error converting page ${pageNumber} to image:`, error);
-    throw new Error(
-      `Failed to convert page ${pageNumber} to image. Please ensure GraphicsMagick is installed.`
+
+    // Fallback: Return a simple message instead of throwing error
+    console.log(
+      `GraphicsMagick not available, using fallback for page ${pageNumber}`
     );
+    return {
+      fallback: true,
+      message: `Page ${pageNumber} requires OCR processing but GraphicsMagick is not available. Please contact support.`,
+    };
   }
 };
 
 // Process single page with OCR
 const processPageWithOCR = async (imagePath, pageNumber) => {
   try {
+    // Check if this is a fallback result
+    if (imagePath.fallback) {
+      return {
+        pageNumber,
+        text: imagePath.message,
+        success: false,
+        method: "fallback",
+      };
+    }
+
     const worker = await initializeWorker();
     const {
       data: { text },
@@ -107,10 +123,13 @@ const processPageWithOCR = async (imagePath, pageNumber) => {
       pageNumber,
       text: text.trim(),
       success: true,
+      method: "ocr",
     };
   } catch (error) {
     console.error(`Error processing page ${pageNumber}:`, error);
-    await cleanupTempFiles(imagePath);
+    if (imagePath && typeof imagePath === "string") {
+      await cleanupTempFiles(imagePath);
+    }
     return {
       pageNumber,
       text: "",
@@ -310,13 +329,13 @@ app.get("/api/test-gm", async (req, res) => {
         message: "GraphicsMagick is available",
         path: gmPath,
         version: version.trim(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } else {
       res.json({
         status: "ERROR",
         message: "GraphicsMagick not found",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   } catch (error) {
@@ -324,7 +343,7 @@ app.get("/api/test-gm", async (req, res) => {
       status: "ERROR",
       message: "Error checking GraphicsMagick",
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
