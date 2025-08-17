@@ -127,8 +127,10 @@ const convertPDFToImages = async (pdfPath, pageNumbers = null) => {
 // Convert PDF page to image using pdf2pic (GraphicsMagick) with fallback to pdf-img-convert
 const convertPageToImage = async (pdfPath, pageNumber, outputDir) => {
   try {
-    console.log(`Converting page ${pageNumber} to image using GraphicsMagick...`);
-    
+    console.log(
+      `Converting page ${pageNumber} to image using GraphicsMagick...`
+    );
+
     const options = {
       density: 300,
       saveFilename: `page-${pageNumber}`,
@@ -140,28 +142,40 @@ const convertPageToImage = async (pdfPath, pageNumber, outputDir) => {
 
     const convert = fromPath(pdfPath, options);
     const pageData = await convert(pageNumber);
-    console.log(`Page ${pageNumber} converted successfully using GraphicsMagick: ${pageData.path}`);
+    console.log(
+      `Page ${pageNumber} converted successfully using GraphicsMagick: ${pageData.path}`
+    );
     return pageData.path;
   } catch (error) {
-    console.error(`GraphicsMagick failed for page ${pageNumber}, trying pdf-img-convert fallback:`, error.message);
-    
+    console.error(
+      `GraphicsMagick failed for page ${pageNumber}, trying pdf-img-convert fallback:`,
+      error.message
+    );
+
     try {
-      console.log(`Attempting fallback conversion for page ${pageNumber} using pdf-img-convert...`);
-      
+      console.log(
+        `Attempting fallback conversion for page ${pageNumber} using pdf-img-convert...`
+      );
+
       // Fallback to pdf-img-convert
       const images = await convertPDFToImages(pdfPath, [pageNumber]);
-      
+
       if (images && images.length > 0) {
         // Save the image to the output directory
         const imagePath = path.join(outputDir, `page-${pageNumber}.png`);
         await fs.writeFile(imagePath, images[0]);
-        console.log(`Page ${pageNumber} converted successfully using fallback: ${imagePath}`);
+        console.log(
+          `Page ${pageNumber} converted successfully using fallback: ${imagePath}`
+        );
         return imagePath;
       } else {
         throw new Error(`No image generated for page ${pageNumber}`);
       }
     } catch (fallbackError) {
-      console.error(`Fallback conversion also failed for page ${pageNumber}:`, fallbackError.message);
+      console.error(
+        `Fallback conversion also failed for page ${pageNumber}:`,
+        fallbackError.message
+      );
       return {
         fallback: true,
         message: `Page ${pageNumber} could not be converted to image. GraphicsMagick is not available and fallback conversion failed. Please ensure the PDF contains readable content.`,
