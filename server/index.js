@@ -5,7 +5,7 @@ const path = require("path");
 const fs = require("fs-extra");
 const { v4: uuidv4 } = require("uuid");
 const { PDFDocument } = require("pdf-lib");
-
+const { fromPath } = require("pdf2pic");
 const pdfParse = require("pdf-parse");
 const pdfImgConvert = require("pdf-img-convert");
 const { Document, Packer, Paragraph } = require("docx");
@@ -44,8 +44,10 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     if (file.mimetype === "application/pdf") {
       cb(null, true);
+    } else if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
     } else {
-      cb(new Error("Only PDF files are allowed!"), false);
+      cb(new Error("Only PDF and image files are allowed!"), false);
     }
   },
 });
@@ -122,29 +124,49 @@ const convertPDFToImages = async (pdfPath, pageNumbers = null) => {
   }
 };
 
-// Convert PDF page to image using pdf-img-convert (no GraphicsMagick required)
+// Convert PDF page to image using pdf2pic (GraphicsMagick) with fallback to pdf-img-convert
 const convertPageToImage = async (pdfPath, pageNumber, outputDir) => {
   try {
-    console.log(`Converting page ${pageNumber} to image...`);
+    console.log(`Converting page ${pageNumber} to image using GraphicsMagick...`);
     
-    // Convert specific page using pdf-img-convert
-    const images = await convertPDFToImages(pdfPath, [pageNumber]);
-    
-    if (images && images.length > 0) {
-      // Save the image to the output directory
-      const imagePath = path.join(outputDir, `page-${pageNumber}.png`);
-      await fs.writeFile(imagePath, images[0]);
-      console.log(`Page ${pageNumber} converted successfully: ${imagePath}`);
-      return imagePath;
-    } else {
-      throw new Error(`No image generated for page ${pageNumber}`);
-    }
-  } catch (error) {
-    console.error(`Error converting page ${pageNumber} to image:`, error);
-    return {
-      fallback: true,
-      message: `Page ${pageNumber} could not be converted to image. Please ensure the PDF contains readable content.`,
+    const options = {
+      density: 300,
+      saveFilename: `page-${pageNumber}`,
+      savePath: outputDir,
+      format: "png",
+      width: 2480,
+      height: 3508,
     };
+
+    const convert = fromPath(pdfPath, options);
+    const pageData = await convert(pageNumber);
+    console.log(`Page ${pageNumber} converted successfully using GraphicsMagick: ${pageData.path}`);
+    return pageData.path;
+  } catch (error) {
+    console.error(`GraphicsMagick failed for page ${pageNumber}, trying pdf-img-convert fallback:`, error.message);
+    
+    try {
+      console.log(`Attempting fallback conversion for page ${pageNumber} using pdf-img-convert...`);
+      
+      // Fallback to pdf-img-convert
+      const images = await convertPDFToImages(pdfPath, [pageNumber]);
+      
+      if (images && images.length > 0) {
+        // Save the image to the output directory
+        const imagePath = path.join(outputDir, `page-${pageNumber}.png`);
+        await fs.writeFile(imagePath, images[0]);
+        console.log(`Page ${pageNumber} converted successfully using fallback: ${imagePath}`);
+        return imagePath;
+      } else {
+        throw new Error(`No image generated for page ${pageNumber}`);
+      }
+    } catch (fallbackError) {
+      console.error(`Fallback conversion also failed for page ${pageNumber}:`, fallbackError.message);
+      return {
+        fallback: true,
+        message: `Page ${pageNumber} could not be converted to image. GraphicsMagick is not available and fallback conversion failed. Please ensure the PDF contains readable content.`,
+      };
+    }
   }
 };
 
@@ -400,6 +422,62 @@ app.post("/api/download/docx", async (req, res) => {
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "PDF OCR Server is running" });
+});
+
+// Image upload and OCR processing
+app.post("/api/upload-image", upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No image file uploaded" });
+    }
+
+    const imagePath = req.file.path;
+    console.log(`Processing image: ${req.file.originalname}`);
+
+    try {
+      // Perform OCR on the image
+      const worker = await initializeWorker();
+      const {
+        data: { text },
+      } = await worker.recognize(imagePath);
+
+      // Clean up uploaded file
+      await cleanupTempFiles(imagePath);
+
+      if (text && text.trim().length > 0) {
+        res.json({
+          success: true,
+          filename: req.file.originalname,
+          text: text.trim(),
+          success: true,
+          method: "image_ocr",
+        });
+      } else {
+        res.json({
+          success: true,
+          filename: req.file.originalname,
+          text: "No text could be extracted from this image. Please ensure the image contains clear, readable text.",
+          success: false,
+          method: "image_ocr_failed",
+        });
+      }
+    } catch (ocrError) {
+      console.error("Image OCR processing failed:", ocrError.message);
+      await cleanupTempFiles(imagePath);
+      res.json({
+        success: true,
+        filename: req.file.originalname,
+        text: "OCR processing failed for this image. Please ensure the image contains clear, readable text.",
+        success: false,
+        method: "image_ocr_failed",
+      });
+    }
+  } catch (error) {
+    console.error("Image upload error:", error);
+    res.status(500).json({
+      error: error.message || "Error processing image",
+    });
+  }
 });
 
 // Test endpoint to check GraphicsMagick
