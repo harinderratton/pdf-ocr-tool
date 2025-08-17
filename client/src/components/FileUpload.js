@@ -84,7 +84,7 @@ const FileUpload = ({ onFileUpload }) => {
       <div className="mt-6 text-center text-sm text-gray-500">
         <p>Supported format: PDF only</p>
         <p>Maximum file size: 50MB</p>
-        <p>Maximum pages: 200</p>
+        <p>Maximum pages: 500</p>
       </div>
 
       {isDragReject && (

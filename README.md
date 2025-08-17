@@ -185,7 +185,7 @@ PORT=5000  # Or let the platform set it
 ### File Size Limits
 
 - Maximum file size: 50MB
-- Maximum pages: 200
+- Maximum pages: 500
 - Supported format: PDF only
 
 ### OCR Settings
