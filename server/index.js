@@ -73,11 +73,23 @@ const cleanupTempFiles = async (filePath) => {
 // Extract text from PDF using pdf-parse (no GraphicsMagick required)
 const extractTextFromPDF = async (pdfPath) => {
   try {
+    console.log("Attempting to extract text from PDF...");
     const dataBuffer = await fs.readFile(pdfPath);
+    console.log("PDF file read successfully, size:", dataBuffer.length);
+    
     const data = await pdfParse(dataBuffer);
-    return data.text;
+    console.log("PDF parsed successfully, text length:", data.text ? data.text.length : 0);
+    
+    if (data.text && data.text.trim().length > 0) {
+      console.log("Text extraction successful");
+      return data.text;
+    } else {
+      console.log("No text found in PDF");
+      return null;
+    }
   } catch (error) {
-    console.error("Error extracting text from PDF:", error);
+    console.error("Error extracting text from PDF:", error.message);
+    console.error("Error details:", error);
     return null;
   }
 };
@@ -215,7 +227,7 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
 
     // Try to extract text directly from PDF first
     const extractedText = await extractTextFromPDF(pdfPath);
-    
+
     if (extractedText && extractedText.trim().length > 0) {
       // Text extraction successful, return the text
       res.json({
@@ -232,15 +244,20 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
         ],
       });
     } else {
-      // Text extraction failed, try OCR processing
-      console.log("Text extraction failed, trying OCR processing...");
-      const result = await processPDFInBatches(pdfPath);
-      
+      // Text extraction failed, return a helpful message
+      console.log("Text extraction failed, returning helpful message");
       res.json({
         success: true,
         filename: req.file.originalname,
-        totalPages: result.totalPages,
-        pages: result.results,
+        totalPages: 1,
+        pages: [
+          {
+            pageNumber: 1,
+            text: "This PDF appears to be image-based and requires OCR processing. Currently, OCR processing is not available due to server configuration. Please try a PDF with selectable text or contact support for assistance.",
+            success: false,
+            method: "text_extraction_failed",
+          },
+        ],
       });
     }
 
@@ -387,6 +404,21 @@ app.get("/api/test-gm", async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   }
+});
+
+// Test endpoint for PDF processing
+app.get("/api/test-pdf", (req, res) => {
+  res.json({
+    status: "OK",
+    message: "PDF processing server is running",
+    features: {
+      text_extraction: "Available (pdf-parse)",
+      ocr_processing: "Limited (requires GraphicsMagick)",
+      file_upload: "Available",
+      download: "Available"
+    },
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Error handling middleware
