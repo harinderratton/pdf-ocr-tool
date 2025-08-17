@@ -5,7 +5,7 @@ const path = require("path");
 const fs = require("fs-extra");
 const { v4: uuidv4 } = require("uuid");
 const { PDFDocument } = require("pdf-lib");
-const { fromPath } = require("pdf2pic");
+
 const pdfParse = require("pdf-parse");
 const pdfImgConvert = require("pdf-img-convert");
 const { Document, Packer, Paragraph } = require("docx");
@@ -99,7 +99,7 @@ const extractTextFromPDF = async (pdfPath) => {
 };
 
 // Convert PDF to images using pdf-img-convert (no GraphicsMagick required)
-const convertPDFToImages = async (pdfPath) => {
+const convertPDFToImages = async (pdfPath, pageNumbers = null) => {
   try {
     console.log("Attempting to convert PDF to images using pdf-img-convert...");
     const dataBuffer = await fs.readFile(pdfPath);
@@ -107,7 +107,7 @@ const convertPDFToImages = async (pdfPath) => {
     const outputImages = await pdfImgConvert.convert(dataBuffer, {
       width: 2480,
       height: 3508,
-      page_numbers: [1], // Start with first page
+      page_numbers: pageNumbers, // If null, converts all pages
       base64: false,
     });
 
@@ -122,31 +122,28 @@ const convertPDFToImages = async (pdfPath) => {
   }
 };
 
-// Convert PDF page to image
+// Convert PDF page to image using pdf-img-convert (no GraphicsMagick required)
 const convertPageToImage = async (pdfPath, pageNumber, outputDir) => {
   try {
-    const options = {
-      density: 300,
-      saveFilename: `page-${pageNumber}`,
-      savePath: outputDir,
-      format: "png",
-      width: 2480,
-      height: 3508,
-    };
-
-    const convert = fromPath(pdfPath, options);
-    const pageData = await convert(pageNumber);
-    return pageData.path;
+    console.log(`Converting page ${pageNumber} to image...`);
+    
+    // Convert specific page using pdf-img-convert
+    const images = await convertPDFToImages(pdfPath, [pageNumber]);
+    
+    if (images && images.length > 0) {
+      // Save the image to the output directory
+      const imagePath = path.join(outputDir, `page-${pageNumber}.png`);
+      await fs.writeFile(imagePath, images[0]);
+      console.log(`Page ${pageNumber} converted successfully: ${imagePath}`);
+      return imagePath;
+    } else {
+      throw new Error(`No image generated for page ${pageNumber}`);
+    }
   } catch (error) {
     console.error(`Error converting page ${pageNumber} to image:`, error);
-
-    // Fallback: Return a simple message instead of throwing error
-    console.log(
-      `GraphicsMagick not available, using fallback for page ${pageNumber}`
-    );
     return {
       fallback: true,
-      message: `Page ${pageNumber} requires OCR processing but GraphicsMagick is not available. Please contact support.`,
+      message: `Page ${pageNumber} could not be converted to image. Please ensure the PDF contains readable content.`,
     };
   }
 };
