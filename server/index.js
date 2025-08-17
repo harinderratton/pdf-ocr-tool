@@ -76,10 +76,13 @@ const extractTextFromPDF = async (pdfPath) => {
     console.log("Attempting to extract text from PDF...");
     const dataBuffer = await fs.readFile(pdfPath);
     console.log("PDF file read successfully, size:", dataBuffer.length);
-    
+
     const data = await pdfParse(dataBuffer);
-    console.log("PDF parsed successfully, text length:", data.text ? data.text.length : 0);
-    
+    console.log(
+      "PDF parsed successfully, text length:",
+      data.text ? data.text.length : 0
+    );
+
     if (data.text && data.text.trim().length > 0) {
       console.log("Text extraction successful");
       return data.text;
@@ -415,7 +418,7 @@ app.get("/api/test-pdf", (req, res) => {
       text_extraction: "Available (pdf-parse)",
       ocr_processing: "Limited (requires GraphicsMagick)",
       file_upload: "Available",
-      download: "Available"
+      download: "Available",
     },
     timestamp: new Date().toISOString(),
   });
