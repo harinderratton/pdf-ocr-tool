@@ -1,13 +1,8 @@
-FROM node:18-bullseye
+FROM node:18-slim
 
-# Install GraphicsMagick and other dependencies
+# Install minimal dependencies
 RUN apt-get update && apt-get install -y \
-    graphicsmagick \
-    ghostscript \
-    imagemagick \
-    && rm -rf /var/lib/apt/lists/* \
-    && which gm \
-    && gm version
+    && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR /usr/src/app

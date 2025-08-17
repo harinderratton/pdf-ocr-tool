@@ -6,6 +6,7 @@ const fs = require("fs-extra");
 const { v4: uuidv4 } = require("uuid");
 const { PDFDocument } = require("pdf-lib");
 const { fromPath } = require("pdf2pic");
+const pdfParse = require("pdf-parse");
 const { Document, Packer, Paragraph } = require("docx");
 const Tesseract = require("tesseract.js");
 
@@ -66,6 +67,18 @@ const cleanupTempFiles = async (filePath) => {
     await fs.remove(filePath);
   } catch (error) {
     console.error("Error cleaning up temp file:", error);
+  }
+};
+
+// Extract text from PDF using pdf-parse (no GraphicsMagick required)
+const extractTextFromPDF = async (pdfPath) => {
+  try {
+    const dataBuffer = await fs.readFile(pdfPath);
+    const data = await pdfParse(dataBuffer);
+    return data.text;
+  } catch (error) {
+    console.error("Error extracting text from PDF:", error);
+    return null;
   }
 };
 
@@ -200,8 +213,36 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
     const pdfPath = req.file.path;
     console.log(`Processing PDF: ${req.file.originalname}`);
 
-    // Process the PDF
-    const result = await processPDFInBatches(pdfPath);
+    // Try to extract text directly from PDF first
+    const extractedText = await extractTextFromPDF(pdfPath);
+    
+    if (extractedText && extractedText.trim().length > 0) {
+      // Text extraction successful, return the text
+      res.json({
+        success: true,
+        filename: req.file.originalname,
+        totalPages: 1,
+        pages: [
+          {
+            pageNumber: 1,
+            text: extractedText.trim(),
+            success: true,
+            method: "text_extraction",
+          },
+        ],
+      });
+    } else {
+      // Text extraction failed, try OCR processing
+      console.log("Text extraction failed, trying OCR processing...");
+      const result = await processPDFInBatches(pdfPath);
+      
+      res.json({
+        success: true,
+        filename: req.file.originalname,
+        totalPages: result.totalPages,
+        pages: result.results,
+      });
+    }
 
     // Clean up uploaded file
     await cleanupTempFiles(pdfPath);
