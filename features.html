@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Features - PDF OCR Tool</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .header {
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 1rem 0;
+      }
+
+      .nav {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 2rem;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: #333;
+        font-weight: bold;
+        font-size: 1.2rem;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .nav-links a {
+        text-decoration: none;
+        color: #666;
+        transition: color 0.3s;
+      }
+
+      .nav-links a:hover {
+        color: #667eea;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .hero {
+        text-align: center;
+        color: white;
+        margin-bottom: 4rem;
+      }
+
+      .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+
+      .hero p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+      }
+
+      .feature-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      }
+
+      .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+      }
+
+      .feature-card h3 {
+        color: #333;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+      }
+
+      .feature-card p {
+        color: #666;
+        line-height: 1.6;
+      }
+
+      .comparison-section {
+        background: white;
+        border-radius: 15px;
+        padding: 3rem;
+        margin-bottom: 4rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .comparison-section h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 3rem;
+        font-size: 2.5rem;
+      }
+
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+      }
+
+      .comparison-item {
+        text-align: center;
+        padding: 2rem;
+        border-radius: 10px;
+        background: #f8f9fa;
+      }
+
+      .comparison-item.before {
+        border: 2px solid #ff6b6b;
+      }
+
+      .comparison-item.after {
+        border: 2px solid #51cf66;
+      }
+
+      .comparison-item h3 {
+        margin-bottom: 1rem;
+        font-size: 1.3rem;
+      }
+
+      .comparison-item.before h3 {
+        color: #ff6b6b;
+      }
+
+      .comparison-item.after h3 {
+        color: #51cf66;
+      }
+
+      .comparison-item ul {
+        list-style: none;
+        padding: 0;
+        text-align: left;
+      }
+
+      .comparison-item li {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+      }
+
+      .comparison-item.before li:before {
+        content: "❌";
+        position: absolute;
+        left: 0;
+        color: #ff6b6b;
+      }
+
+      .comparison-item.after li:before {
+        content: "✅";
+        position: absolute;
+        left: 0;
+        color: #51cf66;
+      }
+
+      .cta-section {
+        text-align: center;
+        color: white;
+        margin-bottom: 4rem;
+      }
+
+      .cta-button {
+        display: inline-block;
+        background: white;
+        color: #667eea;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: transform 0.3s, box-shadow 0.3s;
+        margin-top: 1rem;
+      }
+
+      .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .footer {
+        background: white;
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+      }
+
+      @media (max-width: 768px) {
+        .nav-links {
+          display: none;
+        }
+
+        .hero h1 {
+          font-size: 2rem;
+        }
+
+        .comparison-grid {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <nav class="nav">
+        <a href="test.html" class="logo"> 📄 PDF OCR Tool </a>
+        <div class="nav-links">
+          <a href="test.html">Home</a>
+          <a href="features.html">Features</a>
+          <a href="how-it-works.html">How It Works</a>
+          <a href="about.html">About</a>
+        </div>
+      </nav>
+    </header>
+
+    <div class="container">
+      <div class="hero">
+        <h1>Powerful Features</h1>
+        <p>
+          Discover what makes our PDF OCR Tool the best choice for text
+          extraction
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feature-icon">🚀</span>
+          <h3>Lightning Fast Processing</h3>
+          <p>
+            Advanced batch processing handles large PDFs efficiently. Process up
+            to 200 pages with intelligent memory management and parallel OCR
+            processing.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">🎯</span>
+          <h3>High Accuracy OCR</h3>
+          <p>
+            Powered by Tesseract.js with advanced image preprocessing. Achieve
+            95%+ accuracy on clear documents with support for multiple
+            languages.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">📱</span>
+          <h3>Responsive Design</h3>
+          <p>
+            Works perfectly on desktop, tablet, and mobile devices.
+            Drag-and-drop interface with intuitive controls for seamless user
+            experience.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">🔒</span>
+          <h3>Privacy First</h3>
+          <p>
+            Your files are processed in memory and automatically deleted after
+            processing. No data is stored on our servers - complete privacy
+            protection.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">📄</span>
+          <h3>Multiple Formats</h3>
+          <p>
+            Download extracted text in TXT or DOCX formats. Perfect for further
+            editing, analysis, or integration with other applications.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">⚡</span>
+          <h3>Real-time Progress</h3>
+          <p>
+            See exactly what's happening with live progress tracking. Know how
+            many pages are processed and estimated completion time.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">🌍</span>
+          <h3>No Registration Required</h3>
+          <p>
+            Start using immediately without creating accounts or providing
+            personal information. Completely free with no hidden costs.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">🔧</span>
+          <h3>Advanced Processing</h3>
+          <p>
+            Smart image enhancement, noise reduction, and layout analysis.
+            Handles complex documents with tables, columns, and mixed content.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">📊</span>
+          <h3>Detailed Results</h3>
+          <p>
+            Page-by-page text display with success/failure indicators. Copy
+            individual pages or entire documents with one click.
+          </p>
+        </div>
+      </div>
+
+      <div class="comparison-section">
+        <h2>Before vs After</h2>
+        <div class="comparison-grid">
+          <div class="comparison-item before">
+            <h3>Traditional PDFs</h3>
+            <ul>
+              <li>Text is not selectable</li>
+              <li>Cannot search content</li>
+              <li>Difficult to copy text</li>
+              <li>No editing possible</li>
+              <li>Limited accessibility</li>
+              <li>Manual transcription needed</li>
+            </ul>
+          </div>
+          <div class="comparison-item after">
+            <h3>After OCR Processing</h3>
+            <ul>
+              <li>Fully searchable text</li>
+              <li>Easy content discovery</li>
+              <li>One-click text copying</li>
+              <li>Ready for editing</li>
+              <li>Screen reader compatible</li>
+              <li>Instant text extraction</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-section">
+        <h2>Ready to Transform Your PDFs?</h2>
+        <p>
+          Join thousands of users who have already unlocked the power of their
+          documents
+        </p>
+        <a href="test.html" class="cta-button">Start OCR Processing Now</a>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div style="max-width: 1200px; margin: 0 auto">
+        <div style="text-align: left; margin-bottom: 2rem">
+          <h3
+            style="
+              font-size: 1.125rem;
+              font-weight: 600;
+              color: #111827;
+              margin-bottom: 1rem;
+            "
+          >
+            PDF OCR Tool
+          </h3>
+          <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem">
+            Free online tool to extract text from PDF files using advanced OCR
+            technology. No registration required, completely free to use.
+          </p>
+          <div
+            style="
+              margin-top: 1rem;
+              padding-top: 1rem;
+              border-top: 1px solid #e5e7eb;
+            "
+          >
+            <p
+              style="
+                color: #6b7280;
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
+              "
+            >
+              Managed by <strong style="color: #374151">Harinder Singh</strong>
+            </p>
+            <p
+              style="
+                color: #6b7280;
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
+              "
+            >
+              Contact: <strong style="color: #374151">+91 9815393101</strong>
+            </p>
+            <p
+              style="
+                color: #6b7280;
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
+              "
+            >
+              Service since <strong style="color: #374151">2019</strong>
+            </p>
+          </div>
+        </div>
+        <div
+          style="
+            border-top: 1px solid #e5e7eb;
+            padding-top: 2rem;
+            text-align: center;
+          "
+        >
+          <p style="color: #6b7280; font-size: 0.875rem">
+            &copy; 2024 PDF OCR Tool. Built with ❤️ for the community.
+          </p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

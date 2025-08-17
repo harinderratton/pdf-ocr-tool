@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF OCR Tool - Test</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      .container {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+      }
+      .upload-area {
+        border: 2px dashed #ddd;
+        border-radius: 10px;
+        padding: 40px;
+        text-align: center;
+        margin: 20px 0;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+      .upload-area:hover {
+        border-color: #667eea;
+        background-color: #f8f9ff;
+      }
+      .upload-area.dragover {
+        border-color: #667eea;
+        background-color: #f0f4ff;
+      }
+      .progress {
+        width: 100%;
+        height: 20px;
+        background-color: #f0f0f0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 20px 0;
+        display: none;
+      }
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+      .results {
+        margin-top: 20px;
+        display: none;
+      }
+      .page {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 10px 0;
+      }
+      .page h3 {
+        margin: 0 0 10px 0;
+        color: #495057;
+      }
+      .page-content {
+        background: white;
+        padding: 10px;
+        border-radius: 3px;
+        white-space: pre-wrap;
+        font-family: monospace;
+        font-size: 14px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .download-buttons {
+        margin: 20px 0;
+        display: none;
+      }
+      .btn {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+        font-size: 14px;
+      }
+      .btn:hover {
+        background: #5a6fd8;
+      }
+      .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        display: none;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div style="text-align: center; margin-bottom: 30px">
+        <h1>📄 PDF OCR Tool</h1>
+        <p style="color: #666; margin-bottom: 20px">
+          Upload a PDF file to extract text using OCR technology
+        </p>
+        <div style="margin-top: 20px">
+          <a
+            href="features.html"
+            style="color: #667eea; text-decoration: none; margin: 0 15px"
+            >Features</a
+          >
+          <a
+            href="how-it-works.html"
+            style="color: #667eea; text-decoration: none; margin: 0 15px"
+            >How It Works</a
+          >
+          <a
+            href="about.html"
+            style="color: #667eea; text-decoration: none; margin: 0 15px"
+            >About</a
+          >
+        </div>
+      </div>
+
+      <div class="upload-area" id="uploadArea">
+        <div style="font-size: 48px; margin-bottom: 20px">📁</div>
+        <h3>Drop your PDF here</h3>
+        <p>or click to browse files</p>
+        <input type="file" id="fileInput" accept=".pdf" style="display: none" />
+      </div>
+
+      <div class="progress" id="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div class="error" id="error"></div>
+      <div class="success" id="success"></div>
+
+      <div class="download-buttons" id="downloadButtons">
+        <button class="btn" onclick="downloadTXT()">📄 Download as TXT</button>
+        <button class="btn" onclick="downloadDOCX()">
+          📝 Download as DOCX
+        </button>
+        <button class="btn" onclick="copyToClipboard()">
+          📋 Copy All Text
+        </button>
+      </div>
+
+      <div class="results" id="results"></div>
+    </div>
+
+    <script>
+      let currentResults = null;
+      let currentFilename = "";
+
+      const uploadArea = document.getElementById("uploadArea");
+      const fileInput = document.getElementById("fileInput");
+      const progress = document.getElementById("progress");
+      const progressBar = document.getElementById("progressBar");
+      const error = document.getElementById("error");
+      const success = document.getElementById("success");
+      const results = document.getElementById("results");
+      const downloadButtons = document.getElementById("downloadButtons");
+
+      // Drag and drop functionality
+      uploadArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        uploadArea.classList.add("dragover");
+      });
+
+      uploadArea.addEventListener("dragleave", () => {
+        uploadArea.classList.remove("dragover");
+      });
+
+      uploadArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove("dragover");
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFile(files[0]);
+        }
+      });
+
+      uploadArea.addEventListener("click", () => {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) {
+          handleFile(e.target.files[0]);
+        }
+      });
+
+      function handleFile(file) {
+        if (file.type !== "application/pdf") {
+          showError("Please select a PDF file");
+          return;
+        }
+
+        if (file.size > 50 * 1024 * 1024) {
+          showError("File size must be less than 50MB");
+          return;
+        }
+
+        uploadFile(file);
+      }
+
+      async function uploadFile(file) {
+        const formData = new FormData();
+        formData.append("pdf", file);
+
+        showProgress();
+        hideError();
+        hideSuccess();
+
+        try {
+          const response = await fetch("http://localhost:5000/api/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Upload failed");
+          }
+
+          const data = await response.json();
+          currentResults = data;
+          currentFilename = file.name;
+
+          showSuccess(`Successfully processed ${data.totalPages} pages`);
+          showResults(data);
+          showDownloadButtons();
+          hideProgress();
+        } catch (err) {
+          showError(err.message);
+          hideProgress();
+        }
+      }
+
+      function showProgress() {
+        progress.style.display = "block";
+        let width = 0;
+        const interval = setInterval(() => {
+          if (width >= 90) {
+            clearInterval(interval);
+          } else {
+            width += Math.random() * 10;
+            progressBar.style.width = width + "%";
+          }
+        }, 500);
+      }
+
+      function hideProgress() {
+        progress.style.display = "none";
+        progressBar.style.width = "0%";
+      }
+
+      function showError(message) {
+        error.textContent = message;
+        error.style.display = "block";
+      }
+
+      function hideError() {
+        error.style.display = "none";
+      }
+
+      function showSuccess(message) {
+        success.textContent = message;
+        success.style.display = "block";
+      }
+
+      function hideSuccess() {
+        success.style.display = "none";
+      }
+
+      function showResults(data) {
+        results.innerHTML = "";
+        results.style.display = "block";
+
+        data.pages.forEach((page) => {
+          const pageDiv = document.createElement("div");
+          pageDiv.className = "page";
+
+          const status = page.success ? "✅ Success" : "❌ Failed";
+          pageDiv.innerHTML = `
+                    <h3>Page ${page.pageNumber} - ${status}</h3>
+                    <div class="page-content">${
+                      page.success ? page.text : "Failed to extract text"
+                    }</div>
+                `;
+
+          results.appendChild(pageDiv);
+        });
+      }
+
+      function showDownloadButtons() {
+        downloadButtons.style.display = "block";
+      }
+
+      async function downloadTXT() {
+        if (!currentResults) return;
+
+        try {
+          const response = await fetch(
+            "http://localhost:5000/api/download/txt",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                pages: currentResults.pages,
+                filename: currentFilename,
+              }),
+            }
+          );
+
+          if (!response.ok) throw new Error("Download failed");
+
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${currentFilename.replace(".pdf", "")}_ocr.txt`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (err) {
+          showError("Failed to download TXT file");
+        }
+      }
+
+      async function downloadDOCX() {
+        if (!currentResults) return;
+
+        try {
+          const response = await fetch(
+            "http://localhost:5000/api/download/docx",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                pages: currentResults.pages,
+                filename: currentFilename,
+              }),
+            }
+          );
+
+          if (!response.ok) throw new Error("Download failed");
+
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${currentFilename.replace(".pdf", "")}_ocr.docx`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (err) {
+          showError("Failed to download DOCX file");
+        }
+      }
+
+      async function copyToClipboard() {
+        if (!currentResults) return;
+
+        const allText = currentResults.pages
+          .map((page) => `=== Page ${page.pageNumber} ===\n${page.text}\n\n`)
+          .join("");
+
+        try {
+          await navigator.clipboard.writeText(allText);
+          showSuccess("Text copied to clipboard!");
+        } catch (err) {
+          showError("Failed to copy text to clipboard");
+        }
+      }
+    </script>
+
+    <footer
+      style="
+        background: white;
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+        margin-top: 3rem;
+        border-top: 1px solid #e5e7eb;
+      "
+    >
+      <div style="max-width: 1200px; margin: 0 auto">
+        <div style="text-align: left; margin-bottom: 2rem">
+          <h3
+            style="
+              font-size: 1.125rem;
+              font-weight: 600;
+              color: #111827;
+              margin-bottom: 1rem;
+            "
+          >
+            PDF OCR Tool
+          </h3>
+          <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem">
+            Free online tool to extract text from PDF files using advanced OCR
+            technology. No registration required, completely free to use.
+          </p>
+          <div
+            style="
+              margin-top: 1rem;
+              padding-top: 1rem;
+              border-top: 1px solid #e5e7eb;
+            "
+          >
+            <p
+              style="
+                color: #6b7280;
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
+              "
+            >
+              Managed by <strong style="color: #374151">Harinder Singh</strong>
+            </p>
+            <p
+              style="
+                color: #6b7280;
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
+              "
+            >
+              Contact: <strong style="color: #374151">+91 9815393101</strong>
+            </p>
+            <p
+              style="
+                color: #6b7280;
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
+              "
+            >
+              Service since <strong style="color: #374151">2019</strong>
+            </p>
+          </div>
+        </div>
+        <div
+          style="
+            border-top: 1px solid #e5e7eb;
+            padding-top: 2rem;
+            text-align: center;
+          "
+        >
+          <p style="color: #6b7280; font-size: 0.875rem">
+            &copy; 2024 PDF OCR Tool. Built with ❤️ for the community.
+          </p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

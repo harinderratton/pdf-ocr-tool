@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>How It Works - PDF OCR Tool</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .header {
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 1rem 0;
+      }
+
+      .nav {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 2rem;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: #333;
+        font-weight: bold;
+        font-size: 1.2rem;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .nav-links a {
+        text-decoration: none;
+        color: #666;
+        transition: color 0.3s;
+      }
+
+      .nav-links a:hover {
+        color: #667eea;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .hero {
+        text-align: center;
+        color: white;
+        margin-bottom: 4rem;
+      }
+
+      .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+
+      .hero p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+      }
+
+      .process-section {
+        background: white;
+        border-radius: 15px;
+        padding: 3rem;
+        margin-bottom: 4rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .process-section h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 3rem;
+        font-size: 2.5rem;
+      }
+
+      .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 3rem;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+        align-items: center;
+        padding: 2rem;
+        border-radius: 15px;
+        background: #f8f9fa;
+        position: relative;
+      }
+
+      .step:nth-child(even) {
+        grid-template-columns: 2fr 1fr;
+      }
+
+      .step-number {
+        background: #667eea;
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+      }
+
+      .step-content h3 {
+        color: #333;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+      }
+
+      .step-content p {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+      }
+
+      .step-image {
+        background: #e9ecef;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+      }
+
+      .tech-section {
+        background: white;
+        border-radius: 15px;
+        padding: 3rem;
+        margin-bottom: 4rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .tech-section h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 3rem;
+        font-size: 2.5rem;
+      }
+
+      .tech-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+      }
+
+      .tech-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        border: 2px solid #e9ecef;
+        transition: border-color 0.3s;
+      }
+
+      .tech-card:hover {
+        border-color: #667eea;
+      }
+
+      .tech-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+
+      .tech-card h3 {
+        color: #333;
+        margin-bottom: 1rem;
+      }
+
+      .tech-card p {
+        color: #666;
+        line-height: 1.6;
+      }
+
+      .flowchart {
+        background: white;
+        border-radius: 15px;
+        padding: 3rem;
+        margin-bottom: 4rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .flowchart h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 3rem;
+        font-size: 2.5rem;
+      }
+
+      .flow-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        align-items: center;
+      }
+
+      .flow-step {
+        background: #667eea;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 25px;
+        font-weight: bold;
+        position: relative;
+        min-width: 200px;
+        text-align: center;
+      }
+
+      .flow-arrow {
+        font-size: 2rem;
+        color: white;
+        margin: 1rem 0;
+      }
+
+      .cta-section {
+        text-align: center;
+        color: white;
+        margin-bottom: 4rem;
+      }
+
+      .cta-button {
+        display: inline-block;
+        background: white;
+        color: #667eea;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: transform 0.3s, box-shadow 0.3s;
+        margin-top: 1rem;
+      }
+
+      .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .footer {
+        background: white;
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+      }
+
+      @media (max-width: 768px) {
+        .nav-links {
+          display: none;
+        }
+
+        .hero h1 {
+          font-size: 2rem;
+        }
+
+        .step {
+          grid-template-columns: 1fr;
+          text-align: center;
+        }
+
+        .step:nth-child(even) {
+          grid-template-columns: 1fr;
+        }
+
+        .tech-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <nav class="nav">
+        <a href="test.html" class="logo"> 📄 PDF OCR Tool </a>
+        <div class="nav-links">
+          <a href="test.html">Home</a>
+          <a href="features.html">Features</a>
+          <a href="how-it-works.html">How It Works</a>
+          <a href="about.html">About</a>
+        </div>
+      </nav>
+    </header>
+
+    <div class="container">
+      <div class="hero">
+        <h1>How It Works</h1>
+        <p>Discover the magic behind our advanced OCR technology</p>
+      </div>
+
+      <div class="process-section">
+        <h2>The OCR Process</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-content">
+              <div class="step-number">1</div>
+              <h3>Upload Your PDF</h3>
+              <p>
+                Simply drag and drop your PDF file onto our intuitive interface.
+                We support files up to 50MB and 200 pages. The file is securely
+                uploaded and prepared for processing.
+              </p>
+              <p><strong>Supported formats:</strong> PDF only</p>
+              <p><strong>File size limit:</strong> 50MB maximum</p>
+            </div>
+            <div class="step-image">📁</div>
+          </div>
+
+          <div class="step">
+            <div class="step-image">🔄</div>
+            <div class="step-content">
+              <div class="step-number">2</div>
+              <h3>PDF to Image Conversion</h3>
+              <p>
+                Using GraphicsMagick and Ghostscript, we convert each PDF page
+                into high-resolution images (300 DPI). This ensures optimal OCR
+                accuracy by creating clear, detailed images for text
+                recognition.
+              </p>
+              <p><strong>Resolution:</strong> 300 DPI for best results</p>
+              <p><strong>Format:</strong> PNG images</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-content">
+              <div class="step-number">3</div>
+              <h3>Image Preprocessing</h3>
+              <p>
+                Advanced image enhancement techniques are applied to improve OCR
+                accuracy. This includes noise reduction, contrast enhancement,
+                and layout analysis to prepare images for optimal text
+                recognition.
+              </p>
+              <p>
+                <strong>Enhancements:</strong> Noise reduction, contrast
+                adjustment
+              </p>
+              <p><strong>Analysis:</strong> Layout and structure detection</p>
+            </div>
+            <div class="step-image">🎨</div>
+          </div>
+
+          <div class="step">
+            <div class="step-image">🤖</div>
+            <div class="step-content">
+              <div class="step-number">4</div>
+              <h3>OCR Text Recognition</h3>
+              <p>
+                Powered by Tesseract.js, our advanced OCR engine analyzes each
+                image pixel by pixel to identify and extract text. The system
+                recognizes characters, words, and maintains text formatting and
+                layout.
+              </p>
+              <p>
+                <strong>Engine:</strong> Tesseract.js with English language
+                support
+              </p>
+              <p><strong>Accuracy:</strong> 95%+ on clear documents</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-content">
+              <div class="step-number">5</div>
+              <h3>Batch Processing</h3>
+              <p>
+                Large PDFs are processed in batches of 5 pages simultaneously to
+                optimize performance and memory usage. This ensures fast
+                processing while maintaining system stability.
+              </p>
+              <p><strong>Batch size:</strong> 5 pages at a time</p>
+              <p>
+                <strong>Memory optimization:</strong> Intelligent resource
+                management
+              </p>
+            </div>
+            <div class="step-image">⚡</div>
+          </div>
+
+          <div class="step">
+            <div class="step-image">📄</div>
+            <div class="step-content">
+              <div class="step-number">6</div>
+              <h3>Text Extraction & Formatting</h3>
+              <p>
+                Extracted text is cleaned, formatted, and organized by page. The
+                system maintains paragraph structure, line breaks, and text
+                hierarchy to preserve document formatting.
+              </p>
+              <p><strong>Formatting:</strong> Preserves original layout</p>
+              <p><strong>Organization:</strong> Page-by-page structure</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-content">
+              <div class="step-number">7</div>
+              <h3>Results & Download</h3>
+              <p>
+                View extracted text page by page with success indicators.
+                Download in TXT or DOCX format, or copy all text to clipboard.
+                Files are automatically cleaned up for privacy.
+              </p>
+              <p><strong>Formats:</strong> TXT, DOCX</p>
+              <p><strong>Privacy:</strong> Automatic file cleanup</p>
+            </div>
+            <div class="step-image">✅</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tech-section">
+        <h2>Technology Stack</h2>
+        <div class="tech-grid">
+          <div class="tech-card">
+            <div class="tech-icon">🤖</div>
+            <h3>Tesseract.js</h3>
+            <p>
+              Advanced OCR engine that provides high-accuracy text recognition
+              with support for multiple languages and complex layouts.
+            </p>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🖼️</div>
+            <h3>GraphicsMagick</h3>
+            <p>
+              Powerful image processing library for converting PDF pages to
+              high-quality images with precise control over resolution and
+              format.
+            </p>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">📄</div>
+            <h3>Ghostscript</h3>
+            <p>
+              PDF processing engine that handles complex PDF structures and
+              ensures accurate conversion from PDF to image format.
+            </p>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">⚡</div>
+            <h3>Node.js</h3>
+            <p>
+              High-performance server runtime that enables fast, scalable
+              processing with efficient memory management and concurrent
+              operations.
+            </p>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🎨</div>
+            <h3>Image Processing</h3>
+            <p>
+              Advanced algorithms for noise reduction, contrast enhancement, and
+              layout analysis to improve OCR accuracy.
+            </p>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🔒</div>
+            <h3>Security</h3>
+            <p>
+              In-memory processing with automatic file cleanup ensures your
+              documents remain private and secure throughout the process.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flowchart">
+        <h2>Processing Flow</h2>
+        <div class="flow-steps">
+          <div class="flow-step">PDF Upload</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step">Page Conversion</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step">Image Enhancement</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step">OCR Processing</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step">Text Extraction</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step">Format & Download</div>
+        </div>
+      </div>
+
+      <div class="cta-section">
+        <h2>Ready to Experience the Magic?</h2>
+        <p>See our advanced OCR technology in action with your own documents</p>
+        <a href="test.html" class="cta-button">Try It Now</a>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div style="max-width: 1200px; margin: 0 auto">
+        <div style="text-align: left; margin-bottom: 2rem">
+          <h3
+            style="
+              font-size: 1.125rem;
+              font-weight: 600;
+              color: #111827;
+              margin-bottom: 1rem;
+            "
+          >
+            PDF OCR Tool
+          </h3>
+          <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem">
+            Free online tool to extract text from PDF files using advanced OCR
+            technology. No registration required, completely free to use.
+          </p>
+          <div
+            style="
+              margin-top: 1rem;
+              padding-top: 1rem;
+              border-top: 1px solid #e5e7eb;
+            "
+          >
+            <p
+              style="
+                color: #6b7280;
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
+              "
+            >
+              Managed by <strong style="color: #374151">Harinder Singh</strong>
+            </p>
+            <p
+              style="
+                color: #6b7280;
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
+              "
+            >
+              Contact: <strong style="color: #374151">+91 9815393101</strong>
+            </p>
+            <p
+              style="
+                color: #6b7280;
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
+              "
+            >
+              Service since <strong style="color: #374151">2019</strong>
+            </p>
+          </div>
+        </div>
+        <div
+          style="
+            border-top: 1px solid #e5e7eb;
+            padding-top: 2rem;
+            text-align: center;
+          "
+        >
+          <p style="color: #6b7280; font-size: 0.875rem">
+            &copy; 2024 PDF OCR Tool. Built with ❤️ for the community.
+          </p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
